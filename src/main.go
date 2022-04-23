@@ -1,19 +1,20 @@
 package main
 
 import (
-	"net/http"
-	"github.com/gin-gonic/gin"
 	"errors"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type book struct {
-	ID string `json:"id"`
-	Title string `json:"title"`
-	Author string `json:"author"`
-	Quantity int `json:"quantity"`
+	ID       string `json:"id"`
+	Title    string `json:"title"`
+	Author   string `json:"author"`
+	Quantity int    `json:"quantity"`
 }
 
-var books = []book {
+var books = []book{
 	{ID: "1", Title: "Go API Tutorial", Author: "TechWithTim", Quantity: 2},
 	{ID: "2", Title: "Make An API With Go", Author: "GoAPI", Quantity: 5},
 	{ID: "3", Title: "So easy", Author: "Golang", Quantity: 6},
@@ -28,7 +29,7 @@ func bookById(c *gin.Context) {
 	book, err := getBookById(id)
 
 	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Book not found."})
+		notFoundException(c)
 		return
 	}
 
@@ -39,19 +40,19 @@ func checkoutBook(c *gin.Context) {
 	id, ok := c.GetQuery("id")
 
 	if !ok {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Missing id query parameter."})
+		MissingQueryException(c)
 		return
 	}
 
 	book, err := getBookById(id)
 
 	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Book not found."})
+		notFoundException(c)
 		return
 	}
 
 	if book.Quantity <= 0 {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Book not available."})
+		NotAvailableException(c)
 		return
 	}
 
@@ -63,14 +64,14 @@ func returnBook(c *gin.Context) {
 	id, ok := c.GetQuery("id")
 
 	if !ok {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Missing id query parameter."})
+		MissingQueryException(c)
 		return
 	}
 
 	book, err := getBookById(id)
 
 	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Book not found."})
+		notFoundException(c)
 		return
 	}
 
@@ -112,4 +113,16 @@ func main() {
 	router.PATCH("/checkout", checkoutBook)
 	router.PATCH("/return", returnBook)
 	router.Run("localhost:8080")
+}
+
+func notFoundException(context *gin.Context) {
+	context.IndentedJSON(http.StatusNotFound, gin.H{"message": "Book was not found."})
+}
+
+func MissingQueryException(context *gin.Context) {
+	context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Missing id query parameter."})
+}
+
+func NotAvailableException(context *gin.Context) {
+	context.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Book was not available."})
 }
